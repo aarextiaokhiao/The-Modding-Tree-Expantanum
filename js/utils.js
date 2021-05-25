@@ -172,7 +172,7 @@ function goBack() {
 
 function layOver(obj1, obj2) {
 	for (let x in obj2) {
-		if (obj2[x] instanceof ExpantaNum) obj1[x] = new ExpantaNum(obj2[x])
+		if (obj2[x] instanceof ExpantaNum) obj1[x] = EN(obj2[x])
 		else if (obj2[x] instanceof Object) layOver(obj1[x], obj2[x]);
 		else obj1[x] = obj2[x];
 	}
@@ -243,7 +243,8 @@ function keepGoing() {
 }
 
 function toNumber(x) {
-	if (x.mag !== undefined) return x.toNumber()
+	if (!x && x !== "") return x
+	if (x.array !== undefined) return x.toNumber()
 	if (x + 0 !== x) return parseFloat(x)
 	return x
 }

@@ -51,10 +51,10 @@ function getNextAt(layer, canMax=false, useType = null) {
 
 		}
 	if(tmp[layer].type == "none")
-		return new ExpantaNum (Infinity)
+		return EN (Infinity)
 
-	if (tmp[layer].gainMult.lte(0)) return new ExpantaNum(Infinity)
-	if (tmp[layer].gainExp.lte(0)) return new ExpantaNum(Infinity)
+	if (tmp[layer].gainMult.lte(0)) return EN(Infinity)
+	if (tmp[layer].gainExp.lte(0)) return EN(Infinity)
 
 	if (type=="static") 
 	{
