@@ -10,9 +10,11 @@ addLayer("aar", {
 
     startData() { return {
         unlocked: true,
-		points: EN(0),
-        best: EN(0),
-        bal: EN(0),
+		points: EN(modData.aarexHeadstart ? 3 : 0),
+        best: EN(modData.aarexHeadstart ? 3 : 0),
+        bal: EN(modData.aarexHeadstart ? 2e6 : 0),
+
+		upgrades: modData.aarexHeadstart ? [101, 102, 103, 104, 111, 112, 113, 114, 121, 122, 123, 124, 131, 132, 133, 134, 201, 212, 214, 215] : [],
 
         dimPoints: EN(0),
         dims: [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)],
@@ -875,15 +877,23 @@ addLayer("aar", {
                     ["row", [["buyable", 111], ["buyable", 112], ["buyable", 113]]]
                 ],
             },
+            "options": {
+                title: "(Aarex's Layer Edit) Options",
+                content: [
+                    ["ale-options"]
+                ],
+            },
         },
     },
     tabFormat: [
         "main-display",
         "prestige-button",
         ["blank", "20px"],
-        ["raw-html", () => `You have <h3 style="color:#fff9ab">${format(player.aar.bal)}</h3> Aarex balancing (${format(tmp[this.layer].effect.balProd)}/s).`],
+        ["raw-html", () => `You have <h3 style="color:#fff9ab">${format(player.aar.bal)}</h3> Aarex balancing. (${format(tmp[this.layer].effect.balProd)}/s)`],
         ["blank", "10px"],
         ["microtabs", "main"],
         ["blank", "20px"],
     ],
 })
+
+//Aarex's mod for his layer edit

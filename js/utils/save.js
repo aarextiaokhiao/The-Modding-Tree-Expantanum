@@ -23,7 +23,7 @@ function startPlayerBase() {
 		forceOneTab: false,
 		points: modInfo.initialStartPoints,
 		subtabs: {},
-		lastSafeTab: (readData(layoutInfo.showTree) ? "none" : layoutInfo.startTab)
+		lastSafeTab: (readData(layoutInfo.showTree) ? "none" : layoutInfo.startTab),
 	};
 }
 function getStartPlayer() {
@@ -55,9 +55,9 @@ function getStartPlayer() {
 			for (item in layers[layer].infoboxes)
 				playerdata.infoboxes[layer][item] = false;
 		}
-
 	}
-	return playerdata;
+
+	return playerdata
 }
 function getStartLayerData(layer) {
 	layerdata = {};
@@ -80,7 +80,7 @@ function getStartLayerData(layer) {
 	if (layerdata.clickables == undefined)
 		layerdata.clickables = getStartClickables(layer);
 	layerdata.spentOnBuyables = EN(0);
-	layerdata.upgrades = [];
+	layerdata.upgrades = layerdata.upgrades || [];
 	layerdata.milestones = [];
 	layerdata.lastMilestone = null;
 	layerdata.achievements = [];

@@ -2,23 +2,33 @@
 function exponentialFormat(num, precision, mantissa = true) {
     var exp = num.log10().floor()
     var man = num.div(EN.pow(10, exp))
-    return man.toFixed(precision) + "×10↑" + commaFormat(exp)
+    return man.toFixed(precision) + "e" + commaFormat(exp)
 }
 
 function commaFormat(num, precision) {
-    if (num === null || num === undefined) return "NaN"
-    if (num.array[0][1] < 0.001) return (0).toFixed(precision)
-    return num.toFixed(precision).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")
+    if (num === null || num === undefined || isNaN(num)) return "NaN"
+
+	let exp = Math.floor(Math.log10(num))
+	let mant = num / Math.pow(10, exp)
+
+    if (num < 0.001) return 0
+    if (num > 1e12) return format(num)
+    return Math.floor(num).toFixed(Math.max(Math.min(precision, 6 - exp), 0)).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,")
 }
 
-function formatSmall(x, precision=2) { 
+function formatSmall(x, precision = 2) { 
     return format(x, precision, true)    
 }
 
 function regularFormat(num, precision) {
-    if (isNaN(num)) return "NaN"
-    if (num.array[0][1] < 0.001) return (0).toFixed(precision)
-    return num.toString(Math.max(precision,2))
+    if (num === null || num === undefined || isNaN(num)) return "NaN"
+
+	let exp = Math.floor(Math.log10(num))
+	let mant = num / Math.pow(10, exp)
+
+    if (num < 0.001) return (0).toFixed(precision)
+    if (num >= 1e9) return format(num)
+    return num.toFixed(Math.max(Math.min(precision, 6 - exp), 0))
 }
 
 function fixValue(x, y = 0) {
@@ -31,45 +41,46 @@ function sumValues(x) {
     return x.reduce((a, b) => ExpantaNum.add(a, b))
 }
 
-function format(decimal, precision = 2, small=false) {
+function format(decimal, precision = 2, small = false) {
     small = small || modInfo.allowSmall
-    decimal = new ExpantaNum(decimal)
+    decimal = new EN(decimal)
     if (decimal.array[0] === null || !decimal.isFinite()) return decimal.toString()
 
-    if (decimal.lte(0.001) && small && decimal.gt(0)) {
-        decimal = decimal.pow(-1)
-        let val = ""
-        if (decimal.lt("1e1000")){
-            val = exponentialFormat(decimal, precision)
-            return val.replace(/([^(?:e|F)]*)$/, '-$1')
-        }
-        else return format(decimal, precision) + "⁻¹"
-    } else if (decimal.lt(1000)) {
-        return commaFormat(decimal, precision)
-    } else if (decimal.lt(1e9)) {
-        return commaFormat(decimal, 0)
-    } else if (decimal.lt("e1000")) {
-        return exponentialFormat(decimal, 3)
-    } else if (decimal.lt("e1000000")) {
-        return exponentialFormat(decimal, 0)
-    } else if (decimal.lt("eee1000000")) {
-        var tower = ""
-        while (decimal.gte("e1000000")) {
-            tower += "10↑"
-            decimal = decimal.log10()
-        }
-        var frm = format(decimal, 0)
-        if (decimal.gte(1000000000)) frm = "(" + frm + ")"
-        return tower + frm
-    } else if (decimal.lt("10^^1000000000")) {
-        var tower = decimal.slog(10).sub(1)
-        var towerF = tower.floor()
-        var rem = EN.pow(10, tower.sub(towerF))
-        if (rem <= 9) rem = EN.pow(10, rem)
-        else towerF = towerF.add(1)
-        return "10↑↑" + commaFormat(towerF) + "↑" + format(rem, 3)
-    }
-    return "too large to format"
+	let exp = decimal.array[0] || 0
+	let layer = decimal.array[1] || 0
+	let pent = decimal.array[2] || 0
+	let hex = 0
+
+	let r = ""
+
+	if (exp >= 1e9) {
+		exp = Math.log10(exp)
+		layer++
+	}
+	if (layer >= 10) {
+		exp = layer + EN.slog(exp, 10).toNumber()
+		layer = 0
+		pent++
+	}
+
+	//Pentation
+	if (pent > 0) {
+		r += "F".repeat(pent - 1)
+		if (layer == 0) {
+			var expLayer = Math.floor(Math.log10(exp))
+			var mantLayer = Math.pow(10, exp - Math.floor(exp))
+			r += (expLayer < 4 ? mantLayer.toFixed(3 - expLayer) : "") + "F"
+		} else r += "F"
+	}
+
+	//Tetration and exponentiation
+	if (layer == 0) r += commaFormat(exp)
+	else {
+		var expExp = Math.floor(Math.log10(exp))
+		var mantExp = Math.pow(10, exp - Math.floor(exp))
+		r += ("e").repeat(layer - 1) + (expExp < 4 ? mantExp.toFixed(3 - expExp) : "") + "e" + commaFormat(exp)
+	}
+	return r
 }
 
 function formatWhole(decimal) {

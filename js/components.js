@@ -551,6 +551,8 @@ function loadVue() {
 	Vue.component('tooltip', systemComponents['tooltip'])
 	Vue.component('particle', systemComponents['particle'])
 
+	//Aarex's Layer Edit
+	Vue.component('ale-options', systemComponents['ale-options'])
 
 	app = new Vue({
 		el: "#app",
@@ -593,7 +595,7 @@ function loadVue() {
 			mouseX,
 			mouseY,
 			shiftDown,
-			ctrlDown,
+			ctrlDown
 		},
 	})
 }

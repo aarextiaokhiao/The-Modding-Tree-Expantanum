@@ -1,10 +1,10 @@
 let modInfo = {
-	name: "The Communitree!",
-	id: "allofem",
-	author: "ducdat0507",
+	name: "The Communitree! (Aarex's Upsiding)",
+	id: "aarexupside",
+	author: "TehAarex, the creator of NG+3 and All Dimensions",
 	pointsName: "points",
-	discordName: "",
-	discordLink: "",
+	discordName: "NG+3 Server",
+	discordLink: "https://discord.gg/KsjcgskgTj",
 	initialStartPoints: EN (10), // Used for hard resets and new players
 	
 	offlineLimit: 1,  // In hours
@@ -12,23 +12,14 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.1",
-	name: "Slow and Steady",
+	num: "0.0",
+	name: "CT v0.2.A // Aarex's Patch 1",
 }
 
 let changelog = `<h1>Changelog:</h1><br/>
 	<br/>
-	<h2>v0.1</h2><br/>
-	<h4><i>- Slow and Steady -</i></h4>
-		Added Aarex creator layer.<br/>
-		Added more layers in The Prestige Tree tab.<br/>
-		Migrated to The Modding Tree 2.5.9.2.<br/>
-		Changed from using ExpantaNum.js to OmegaNum.js (and therefore will wipe out everybody's saves, I'm sorry).<br/>
-		Modified number formatting. (look ma, I invented new up arrow notation!)<br/>
-		Bumped endgame to 10↑↑6↑68.475.<br/>
-	<br/>
 	<h2>v0.0</h2><br/>
-		Initial release.<br/>
+		The start of Aarex's Upsiding, with a fanmade patch of v0.2.A.<br/>
 `
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
@@ -71,6 +62,8 @@ function getPointGen() {
 
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
+	theme: "aqua",
+	hqTree: true
 }}
 
 // Display extra things at the top of the page
@@ -89,7 +82,7 @@ function isEndgame() {
 
 // You can change this if you have things that can be messed up by long tick lengths
 function maxTickLength() {
-	return(3600) // Default is 1 hour which is just arbitrarily large
+	return(1/0) // Default is 1 hour which is just arbitrarily large
 }
 
 // Use this if you need to undo inflation from an older version. If the version is older than the version that fixed the issue,

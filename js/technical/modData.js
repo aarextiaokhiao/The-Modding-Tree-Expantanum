@@ -1,0 +1,3 @@
+let modData = {
+	aarexHeadstart: false
+}
