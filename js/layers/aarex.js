@@ -719,7 +719,7 @@ addLayer("aar", {
                         let i = this.id - 100
                         let cost = this.cost()
 
-						if (cost.array[1] < 2) player.aar.dimPoints = player.aar.dimPoints.sub(cost).max(0)
+						if (!(cost.array[1] >= 2)) player.aar.dimPoints = player.aar.dimPoints.sub(cost).max(0)
                         player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                         player.aar.dims[i] = player.aar.dims[i].add(1)
                     },
@@ -900,7 +900,7 @@ addLayer("aar", {
                         let max = tmp[this.layer].clickables[this.id].max
                         let cost = tmp[this.layer].clickables[this.id].maxcost
 
-                        if (cost.array[1] < 2) player.aar.dimPoints = player.aar.dimPoints.sub(cost).max(0)
+                        if (!(cost.array[1] >= 2)) player.aar.dimPoints = player.aar.dimPoints.sub(cost).max(0)
                         player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(max)
                         player.aar.dims[i] = player.aar.dims[i].add(max)
                     },
