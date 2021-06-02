@@ -1,3 +1,3 @@
 let modData = {
-	aarexHeadstart: true
+	aarexHeadstart: false
 }
