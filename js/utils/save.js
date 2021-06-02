@@ -22,6 +22,9 @@ function startPlayerBase() {
 		showStory: true,
 		forceOneTab: false,
 		points: modInfo.initialStartPoints,
+		inlineExp: false,
+		antiEpilepsy: false,
+		isWarned: false,
 		subtabs: {},
 		lastSafeTab: (readData(layoutInfo.showTree) ? "none" : layoutInfo.startTab),
 	};
@@ -213,6 +216,8 @@ function load() {
 	updateTemp();
 	updateTabFormats();
 	loadVue();
+
+	modData.aarexHeadstart = false
 }
 function setupModInfo() {
 	modInfo.changelog = changelog;

@@ -1,3 +1,5 @@
+
+
 addLayer("aar", {
     name: "Aarex",
     symbol: "A",
@@ -42,25 +44,53 @@ addLayer("aar", {
     resetsNothing() {
         return hasUpgrade("aar", 214)
     },
-    onPrestige(gain) {
-        if (!player.jac.upgrades.includes("266"))
-            player.jac.upgrades.push("266")
-    },
     hotkeys: [
-        {key: "a", description: "A: Reset for Aarex points", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {
+            key: "a", 
+            description: "A: Reset for Aarex points", 
+            unlocked() {return tmp[this.layer].layerShown },
+            onPress(){ if (canReset(this.layer)) doReset(this.layer) }
+        },
     ],
 
     effect() {
-        var prod = player.aar.points.gte(1) ? EN.pow(3, softcap(player.aar.points.sub(1), EN(100), 0.5)) : EN(0)
-        for (a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) prod = prod.mul(upgradeEffect("aar", a))
-        var eff = {
+        let prod = player.aar.points.gte(1) ? EN.pow(3, softcap(player.aar.points.sub(1), EN(100), 0.5)) : EN(0)
+        for (let a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) prod = prod.mul(upgradeEffect("aar", a))
+        let eff = {
             balProd: prod,
-            genMult: player.aar.dimPoints.div(1000).add(1).pow(player.aar.dimPoints.add(1).log().div(100).max(10)).pow(buyableEffect("aar", 111))
+            genMult: player.aar.dimPoints.div(1000).add(1).pow(player.aar.dimPoints.add(1).log().pow(hasUpgrade("aar", 252) ? 23 : 1).div(100).max(10)).pow(buyableEffect("aar", 111))
         }
         if (hasUpgrade("aar", 231)) eff.genMult = eff.genMult.pow(buyableEffect("aar", 112))
         if (hasUpgrade("aar", 244)) eff.genMult = eff.genMult.pow(buyableEffect("aar", 113))
+        if (hasUpgrade("aar", 255)) eff.genMult = EN.pow(10, eff.genMult.add(1).log10().pow(player.aar.dimPoints.add(1).log10().add(1).pow(0.5)))
         return eff
     },
+	updateTemp() {
+		let tmpLayer = tmp.aar
+		let upgs = player.aar.upgrades
+
+		//Multiplier per Dimension
+		let mul = 1.05
+		if (upgs.includes(265)) mul = 2
+		else if (upgs.includes(264)) mul = 1.1
+		else if (upgs.includes(262)) mul = 1.08
+		else if (upgs.includes(261)) mul = 1.075
+		else if (upgs.includes(251)) mul = 1.072
+		else if (upgs.includes(235)) mul = 1.07
+		else if (upgs.includes(224)) mul = 1.065
+		tmpLayer.multPerDim = mul
+
+		//Global multiplier
+		let eff = EN(1)
+		if (upgs.includes(244)) eff = eff.mul(buyableEffect("aar", 113))
+		if (upgs.includes(252)) eff = eff.mul(upgradeEffect("aar", 252))
+		if (upgs.includes(255)) eff = eff.mul(player.aar.dimPoints.add(1).log(10).add(1).pow(0.5))
+		tmpLayer.globalMult = eff
+
+		//Reset thingies
+		tmpLayer.boostPow = buyableEffect("aar", 111)
+		tmpLayer.sacMult = buyableEffect("aar", 112)
+	},
     
     upgrades: {
         101: {
@@ -78,6 +108,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
+            unlocked() { return player.aca.best.lte(0) }
         },
         103: {
             title: "Is this just a Timewall?",
@@ -86,6 +117,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
+            unlocked() { return player.aca.best.lte(0) }
         },
         104: {
             title: "Wow this isn't worth it",
@@ -94,14 +126,15 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
+            unlocked() { return player.aca.best.lte(0) }
         },
         111: {
             title: "Let's",
             description: "Points boost Aarex balancing gain.",
             cost() {
-                var cost = 600
-                var ugs = 3
-                for (a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
+                let cost = 600
+                let ugs = 3
+                for (let a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
                     cost *= ugs
                     ugs += ugs - 1
                 }
@@ -121,9 +154,9 @@ addLayer("aar", {
             title: "speed",
             description: "Jacorb points boost Aarex balancing gain.",
             cost() {
-                var cost = 600
-                var ugs = 3
-                for (a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
+                let cost = 600
+                let ugs = 3
+                for (let a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
                     cost *= ugs
                     ugs += ugs - 1
                 }
@@ -133,7 +166,7 @@ addLayer("aar", {
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
             effect() {
-                let eff = player.jac.points.add(1).log10().mul(2).add(1).log10().add(1)
+                let eff = player.jac.points.max(0).add(1).log10().mul(2).add(1).log10().add(1)
                 return eff
             },
             effectDisplay() { return "×" + format(this.effect()) },
@@ -143,9 +176,9 @@ addLayer("aar", {
             title: "things",
             description: "Prestige points boost Aarex balancing gain.",
             cost() {
-                var cost = 600
-                var ugs = 3
-                for (a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
+                let cost = 600
+                let ugs = 3
+                for (let a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
                     cost *= ugs
                     ugs += ugs - 1
                 }
@@ -165,9 +198,9 @@ addLayer("aar", {
             title: "up",
             description: "Aarex balancing boosts Aarex balancing gain.",
             cost() {
-                var cost = 600
-                var ugs = 3
-                for (a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
+                let cost = 600
+                let ugs = 3
+                for (let a = 111; a <= 114; a++) if (hasUpgrade("aar", a)) {
                     cost *= ugs
                     ugs += ugs - 1
                 }
@@ -190,7 +223,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { for (a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
+            unlocked() { for (let a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
         },
         122: {
             title: "all",
@@ -199,7 +232,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { for (a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
+            unlocked() { for (let a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
         },
         123: {
             title: "these",
@@ -208,7 +241,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { for (a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
+            unlocked() { for (let a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
         },
         124: {
             title: "softcaps",
@@ -217,7 +250,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { for (a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
+            unlocked() { for (let a = 111; a <= 114; a++) if (!hasUpgrade("aar", a)) return false; return true },
         },
         201: {
             title: "Simplify Things a Bit",
@@ -240,7 +273,7 @@ addLayer("aar", {
 
                 let eff = EN.pow(time.add(1), time.div(10)).pow(jTime.add(1).log10().pow(3)).pow(0.5)
 
-                let bal = player.aar.bal
+                let bal = player.aar.bal.add(1)
                 let pow = EN(1)
                 if (hasUpgrade("aar", 202)) pow = pow.mul(pow).mul(tmp.aar.upgrades[202].cost)
                 if (hasUpgrade("aar", 203)) pow = pow.mul(pow).mul(tmp.aar.upgrades[203].cost)
@@ -259,7 +292,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         203: {
             title: "Apocalyptetra",
@@ -268,7 +301,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         204: {
             title: "200-noogol",
@@ -277,7 +310,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         205: {
             title: "Mlastomillion",
@@ -286,7 +319,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         206: {
             title: "Binary-doocol",
@@ -315,7 +348,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         212: {
             title: "Upgrade-Automator",
@@ -324,7 +357,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         213: {
             title: "Soul-Automator",
@@ -333,7 +366,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         214: {
             title: "Large Number Convention",
@@ -342,7 +375,7 @@ addLayer("aar", {
             currencyLocation() {return player[this.layer]}, 
             currencyDisplayName: "Aarex balancing",
             currencyInternalName: "bal",
-            unlocked() { return hasUpgrade("aar", 201) },
+            unlocked() { return hasUpgrade("aar", 201) && player.aca.best.lte(0) },
         },
         215: {
             title: "Aarex Point Generator",
@@ -362,8 +395,10 @@ addLayer("aar", {
                 return hasUpgrade("aar", 221) ? { 
                     "margin-right": "0px",
                 } : {
-                    width: "600px",
+                    "position": "relative",
+                    "width": "600px",
                     "margin-right": "-480px",
+                    "z-index": "1",
                 }
             }
         },
@@ -375,6 +410,7 @@ addLayer("aar", {
             style() { 
                 return hasUpgrade("aar", 221) ? { 
                 } : {
+                    "position": "static",
                     "min-height": "0px",
                     "max-height": "0px",
                     opacity: "0.00001",
@@ -391,6 +427,7 @@ addLayer("aar", {
             style() { 
                 return hasUpgrade("aar", 221) ? { 
                 } : {
+                    "position": "static",
                     "min-height": "0px",
                     "max-height": "0px",
                     opacity: "0.00001",
@@ -408,13 +445,14 @@ addLayer("aar", {
                 player.aar.dimPoints = EN(0)
                 player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
                 player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
-                for (var a = 100; a < 110; a++)
+                for (let a = 100; a < 110; a++)
                     player.aar.buyables[a] = EN(0)
                 player.aar.buyables[111] = player.aar.buyables[112] = ExpantaNumZero
             },
             style() { 
                 return hasUpgrade("aar", 221) ? { 
                 } : {
+                    "position": "static",
                     "min-height": "0px",
                     "max-height": "0px",
                     opacity: "0.00001",
@@ -431,6 +469,7 @@ addLayer("aar", {
             style() { 
                 return hasUpgrade("aar", 221) ? { 
                 } : {
+                    "position": "static",
                     "min-height": "0px",
                     "max-height": "0px",
                     opacity: "0.00001",
@@ -472,7 +511,7 @@ addLayer("aar", {
                 player.aar.dimPoints = EN(0)
                 player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
                 player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
-                for (var a = 100; a < 110; a++)
+                for (let a = 100; a < 110; a++)
                     player.aar.buyables[a] = EN(0)
                 player.aar.buyables[111] = player.aar.buyables[112] = ExpantaNumZero
             },
@@ -503,7 +542,7 @@ addLayer("aar", {
         },
         245: {
             title: "Ticksped",
-            description: "Tickspeed Boosts no longet reset.",
+            description: "Tickspeed Boosts no longer reset.",
             cost: EN("eeeee50"),
             unlocked() { return hasUpgrade("aar", 235) },
         },
@@ -511,16 +550,109 @@ addLayer("aar", {
             title: "Aarex Remote Galaxy",
             description: "Resets everything in Aarex Dimensions, but multiplier per buy 1.07× → 1.072×",
             cost: EN("eeeee56"),
-            unlocked() { return hasUpgrade("aar", 234) },
+            unlocked() { return hasUpgrade("aar", 245) },
             onPurchase() {
                 player.aar.dimPoints = EN(0)
                 player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
                 player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
-                for (var a = 100; a < 110; a++)
+                for (let a = 100; a < 110; a++)
                     player.aar.buyables[a] = EN(0)
                 player.aar.buyables[111] = player.aar.buyables[112] = player.aar.buyables[113] = ExpantaNumZero
             },
-            style: { width: "600px" }
+        },
+        252: {
+            title: "Reverse Process",
+            description: "Apply ^3 to DP's exponent in the effect formula. Aarex balancing boost all dims.",
+            cost: EN("eeeee68.48"),
+            unlocked() { return hasUpgrade("aar", 245) },
+            effect() {
+                let p = player.aar.bal.add(1)
+				if (p.eq(1)) return ExpantaNumZero
+				p = p.slog()
+                let eff = p.add(1).pow(p)
+                return eff
+            },
+            effectDisplay() { return "×" + format(this.effect()) },
+        },
+        253: {
+            title: "Dimension Boost Boost",
+            description: "Dimension Boosts works as if you have x^1.2 of them.",
+            cost: EN("eeeee168"),
+            unlocked() { return hasUpgrade("aar", 245) },
+        },
+        254: {
+            title: "Tickspeed Boost Boost",
+            description: "Tickspeed Boosts works as if you have 2x^1.2 of them.",
+            cost: EN("eeeee320"),
+            unlocked() { return hasUpgrade("aar", 245) },
+        },
+        255: {
+            title: "Last Hurrah",
+            description: "Boosts DP's effect and all dimensions by the square root of DP's exponent.",
+            cost: EN("eeeee960"),
+            unlocked() { return hasUpgrade("aar", 245) },
+        },
+        261: {
+            title: "Almost There",
+            description: "Resets everything in Aarex Dimensions, but multiplier per buy 1.072× → 1.075×",
+            cost: EN("eeeee346153"),
+            unlocked() { return hasUpgrade("aar", 255) },
+            onPurchase() {
+                player.aar.dimPoints = EN(0)
+                player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
+                player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
+                for (let a = 100; a < 110; a++)
+                    player.aar.buyables[a] = EN(0)
+                player.aar.buyables[111] = player.aar.buyables[112] = player.aar.buyables[113] = ExpantaNumZero
+            },
+        },
+        262: {
+            title: "Inflation Time",
+            description: "Resets everything in Aarex Dimensions, but multiplier per buy 1.075× → 1.08×",
+            cost: EN("eeeee1076500"),
+            unlocked() { return hasUpgrade("aar", 261) },
+            onPurchase() {
+                player.aar.dimPoints = EN(0)
+                player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
+                player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
+                for (let a = 100; a < 110; a++)
+                    player.aar.buyables[a] = EN(0)
+                player.aar.buyables[111] = player.aar.buyables[112] = player.aar.buyables[113] = ExpantaNumZero
+            },
+        },
+        263: {
+            title: "Boosting in Bulk",
+            description: "You gain 1.2× of your boosts on click.",
+            cost: EN("eeeee10000000"),
+            unlocked() { return hasUpgrade("aar", 262) },
+        },
+        264: {
+            title: "Still Haven't Enough?",
+            description: "Resets everything in Aarex Dimensions, but multiplier per buy 1.08× → 1.1×",
+            cost: EN("eeeee250000000"),
+            unlocked() { return hasUpgrade("aar", 261) },
+            onPurchase() {
+                player.aar.dimPoints = EN(0)
+                player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
+                player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
+                for (let a = 100; a < 110; a++)
+                    player.aar.buyables[a] = EN(0)
+                player.aar.buyables[111] = player.aar.buyables[112] = player.aar.buyables[113] = ExpantaNumZero
+            },
+        },
+        265: {
+            title: "Boosting Immensely",
+            description: "Resets everything in Aarex Dimensions, but multiplier per buy 1.1× → 2×",
+            cost: EN("eeeeee10.9"),
+            unlocked() { return hasUpgrade("aar", 261) },
+            onPurchase() {
+                player.aar.dimPoints = EN(0)
+                player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
+                player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
+                for (let a = 100; a < 110; a++)
+                    player.aar.buyables[a] = EN(0)
+                player.aar.buyables[111] = player.aar.buyables[112] = player.aar.buyables[113] = ExpantaNumZero
+            },
         },
     },
 
@@ -529,55 +661,52 @@ addLayer("aar", {
         
         // Attempt to do linear interpolation for upgrade 215 "Aarex Point Generator"
         if (hasUpgrade("aar", 215)) {
-            if (tmp[this.layer].effect.genMult.gte(1e12))
+            if (tmp[this.layer].effect.genMult.gte(1e9))
                 player.aar.points = player.aar.points.max(EN.tetr(10, 3, tmp[this.layer].effect.genMult.div(5)));
             else {
-                var data = tmp.jac.buyables[143]
-                var end = upgradeEffect("aar", 201).add(1).log10().div(data.cost).pow(.01).mul(data.prestigeMul).pow(0.4).floor()
-                var nEnd = end.iteratedlog(10, EN(3))
-                var start = player.aar.points
-                var nStart = start.iteratedlog(10, EN(3))
+                let data = tmp.jac.buyables[143]
+                let end = upgradeEffect("aar", 201).add(1).log10().div(data.cost).pow(.01).mul(data.prestigeMul).pow(0.4).floor()
+                let nEnd = end.iteratedlog(10, EN(3))
+                let start = player.aar.points
+                let nStart = start.iteratedlog(10, EN(3))
                 if (start.lt(end) && nStart.isFinite() && nEnd.isFinite()) {
-                    var nDelta = nEnd.sub(nStart)
+                    let nDelta = nEnd.sub(nStart)
                     player.aar.points = EN.tetr(10, 3, nStart.add(nDelta.mul(delta).mul(tmp.aar.effect.genMult)))
                 }
             }
         }
 
         // Aarex Dimensions
-        if (hasUpgrade("aar", 221)) {
-            player.aar.dimPoints = player.aar.dimPoints.add(buyableEffect("aar", 100).mul(player.aar.dims[0]).mul(delta))
-            for (var a = 1; a < 10; a++) {
-                player.aar.dims[a-1] = player.aar.dims[a-1].add(buyableEffect("aar", 100 + a).mul(buyableEffect("aar", 113)).mul(player.aar.dims[a]).mul(delta))
-            }
+        if (hasUpgrade("aar", 221) && player.aca.best.lte(0)) {
             if (hasUpgrade("aar", 232)) clickClickable("aar", 111)
             if (hasUpgrade("aar", 242)) player.aar.buyables[112] = player.aar.buyables[112].add(tmp.aar.buyables[112].cost.sub(player.aar.buyables[112]).max(0).mul(1 - 0.9 ** delta))
+
+			let tickspeed = buyableEffect("aar", 113)
+            for (let a = 9; a >= 1; a--) player.aar.dims[a - 1] = player.aar.dims[a - 1].add(buyableEffect("aar", 100 + a).mul(tickspeed).mul(player.aar.dims[a]).mul(delta))
+            player.aar.dimPoints = player.aar.dimPoints.add(buyableEffect("aar", 100).mul(player.aar.dims[0]).mul(delta))
         }
     },
 
     buyables: {
         ...(function() {
-            var b = {};
-            for (var a = 100; a < 110; a++) {
+            let b = {};
+            for (let a = 100; a < 110; a++) {
                 b[a] = {
                     effect() {
-                        var i = this.id - 100
-                        var mul = 1.05
-                        if (hasUpgrade("aar", 251)) mul = 1.072
-                        else if (hasUpgrade("aar", 235)) mul = 1.07
-                        else if (hasUpgrade("aar", 224)) mul = 1.065
-                        var eff = EN.pow(mul, player[this.layer].buyables[this.id].sub(1).max(0)).mul(buyableEffect("aar", 111).div(EN.pow(2, i)).max(1))
-                        if (i == 9 || hasUpgrade("aar", 231)) eff = eff.mul(buyableEffect("aar", 112))
-                        if (hasUpgrade("aar", 241)) eff = eff.mul(tmp[this.layer].buyables[this.id].cost.pow(0.01))
-                        if (hasUpgrade("aar", 244)) eff = eff.mul(buyableEffect("aar", 113))
-                        return eff
+                        let id = this.id
+                        let idDim = id - 99
+						let eff = EN(1)
+
+						var time = Date.now()
+						eff = AAREX_SAFE.calcDimMult(idDim)
+						return eff
                     },
                     cost() {
-                        var i = this.id - 99
+                        let i = this.id - 99
                         return EN.pow(2, i * i).mul(5).mul(EN.pow(1.45 + i * i * 0.05, player[this.layer].buyables[this.id]))
                     },
                     unlocked() {
-                        var i = this.id - 100
+                        let i = this.id - 100
                         return player.aar.buyables[111].add(3).gte(i)
                     },
                     canAfford() {
@@ -587,8 +716,10 @@ addLayer("aar", {
                         return (player.aar.buyables[this.id].gte(1) ? "Buy one<br/>" : "Unlock for ") + format(this.cost())
                     },
                     buy() {
-                        var i = this.id - 100
-                        player.aar.dimPoints = player.aar.dimPoints.sub(this.cost())
+                        let i = this.id - 100
+                        let cost = this.cost()
+
+						if (cost.array[1] < 2) player.aar.dimPoints = player.aar.dimPoints.sub(cost).max(0)
                         player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
                         player.aar.dims[i] = player.aar.dims[i].add(1)
                     },
@@ -612,7 +743,7 @@ addLayer("aar", {
                 return formatWhole(player[this.layer].buyables[this.id])
             }, 
             display() {
-                var data = tmp[this.layer].buyables[this.id]
+                let data = tmp[this.layer].buyables[this.id]
                 return `dimensional boosts
                 
                 which are giving a base ×${format(data.effect)} boost to dimensions and dimension point effect's exponent and unlocking ${formatWhole(player[this.layer].buyables[this.id].min(6))}/6 more dimensions<br/>
@@ -624,17 +755,19 @@ addLayer("aar", {
                 return hasUpgrade("aar", 222)
             },
             effect() {
-                return EN.pow(2, player[this.layer].buyables[this.id])
+                var x = player[this.layer].buyables[this.id]
+                if (hasUpgrade("aar", 253)) x = x.pow(1.2)
+                return EN.pow(2, x)
             },
             cost() {
-                var x = player[this.layer].buyables[this.id]
+                let x = player[this.layer].buyables[this.id]
                 return {
-                    dim: +(x.add(3).min(9)),
+                    dim: +(x.add(3).min(9).floor()),
                     amt: x.sub(6).max(0).mul(x.sub(7).add(12)).add(x).add(6)
                 }
             },
             canAfford() {
-                var cost = this.cost()
+                let cost = this.cost()
                 return player.aar.dims[cost.dim].gte(cost.amt)
             },
             buy() {
@@ -642,12 +775,12 @@ addLayer("aar", {
                     player.aar.dimPoints = EN(0)
                     player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
                     player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
-                    for (var a = 100; a < 110; a++)
+                    for (let a = 100; a < 110; a++)
                         player.aar.buyables[a] = EN(0)
                     player.aar.buyables[112] = ExpantaNumZero
                 }
 
-                player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+                player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1).mul(hasUpgrade("aar", 263) ? 1.2 : 1)
             }
         },
         112: {
@@ -655,7 +788,7 @@ addLayer("aar", {
                 return "×" + format(tmp[this.layer].buyables[this.id].effect)
             }, 
             display() {
-                var data = tmp[this.layer].buyables[this.id]
+                let data = tmp[this.layer].buyables[this.id]
                 return `sacrifice multiplier
                 
                 which are multipling dimension 10 efficiency by the same amount.
@@ -672,8 +805,8 @@ addLayer("aar", {
                 return player.aar.dims[0].add(1).log(10).div(EN(25).sub(hasUpgrade("aar", 233) ? player.aar.buyables[113].mul(2).min(20) : 0)).max(1).pow(2).pow(hasUpgrade("aar", 234) ? player.aar.buyables[111].div(100).add(1) : 1)
             },
             canAfford() {
-                var data = tmp[this.layer].buyables[this.id]
-                return data.cost.gt(data.effect)
+                let data = tmp[this.layer].buyables[this.id]
+                return data.cost.gt(data.effect) && player.aar.buyables[109].gte(1)
             },
             buy() { 
                 player[this.layer].buyables[this.id] = this.cost().sub(1)
@@ -686,7 +819,7 @@ addLayer("aar", {
                 return formatWhole(player[this.layer].buyables[this.id])
             }, 
             display() {
-                var data = tmp[this.layer].buyables[this.id]
+                let data = tmp[this.layer].buyables[this.id]
                 return `tickspeed boosts
                 
                 which are making time in Aarex Dimensions ×${format(data.effect)} faster
@@ -697,15 +830,16 @@ addLayer("aar", {
                 return hasUpgrade("aar", 225)
             },
             effect() {
-                var x = player[this.layer].buyables[this.id]
+                let x = player[this.layer].buyables[this.id]
+                if (hasUpgrade("aar", 254)) x = x.pow(1.2).mul(2)
                 return EN.pow(4, x).add(x)
             },
             cost() {
-                var x = player[this.layer].buyables[this.id]
+                let x = player[this.layer].buyables[this.id]
                 return x.mul(x.mul(10).add(70)).add(100)
             },
             canAfford() {
-                var cost = this.cost()
+                let cost = this.cost()
                 return player.aar.dims[9].gte(cost)
             },
             buy() {
@@ -713,57 +847,60 @@ addLayer("aar", {
                     player.aar.dimPoints = EN(0)
                     player.aar.dims = [EN(1), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0), EN(0)]
                     player.aar.dimMults = [EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1), EN(1)]
-                    for (var a = 100; a < 110; a++)
+                    for (let a = 100; a < 110; a++)
                         player.aar.buyables[a] = EN(0)
                     player.aar.buyables[112] = ExpantaNumZero
                 }
 
-                player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+                player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1).mul(hasUpgrade("aar", 263) ? 1.2 : 1)
             }
         },
     },
     clickables: {
         ...(function() {
-            var b = {};
-            for (var a = 100; a < 110; a++) {
+            let b = {};
+            for (let a = 100; a < 110; a++) {
                 b[a] = {
                     canClick() {
-                        return tmp[this.layer].clickables[this.id].maxcost.lt(player.aar.dimPoints)
+                        return player.aar.dimPoints.gte(tmp[this.layer].buyables[this.id].cost)
                     },
                     display() {
+						let cost = tmp[this.layer].buyables[this.id].cost
+						let max = tmp[this.layer].clickables[this.id].max
                         return "Buy " + formatWhole(tmp[this.layer].clickables[this.id].max) + 
                             "<br/>" + format(tmp[this.layer].clickables[this.id].maxcost)
                     },
                     unlocked() {
-                        var i = this.id - 100
+                        let i = this.id - 100
                         return player.aar.buyables[111].add(3).gte(i)
                     },
                     max() {
-                        var i = this.id - 99
+                        let i = this.id - 99
+                        let res = player.aar.dimPoints
+                        let base = tmp[this.layer].buyables[this.id].cost
+                        let growth = 1.45 + i * i * 0.05
 
-                        var cur = player.aar.dimPoints
-                        var haved = player[this.layer].buyables[this.id]
-                        var base = EN.pow(2, i * i).mul(5)
-                        var growth = EN(1.45 + i * i * 0.05)
-
-                        var max = cur.mul(growth.sub(1)).div(base.mul(growth.pow(haved))).add(1).log().div(growth.log()).floor().max(1)
-                        return max.isFinite() ? max : EN(1)
+						if (base.array[1] >= 2) return res.div(base).log().div(Math.log(growth))
+						return res.div(base).times(growth - 1).add(1).logBase(growth).floor().max(1)
                     },
-                    maxcost() {
-                        var i = this.id - 99
-                        var haved = player[this.layer].buyables[this.id]
-                        var base = EN.pow(2, i * i).mul(5)
-                        var growth = EN(1.45 + i * i * 0.05)
-                        
-                        return growth.pow(haved).mul(growth.pow(this.max()).sub(1)).div(growth.sub(1)).mul(base)
+                    maxcost(toBuy) {
+						if (!toBuy) toBuy = tmp[this.layer].buyables[this.id].max || this.max()
+
+						//Sum = ([cost mult] ^ [toBuy] - 1) / ([cost mult] - 1) * [cost]
+                        let i = this.id - 99
+                        let base = tmp[this.layer].buyables[this.id].cost
+                        let growth = 1.45 + i * i * 0.05
+
+						if (base.array[1] >= 2) return EN.pow(growth, toBuy).times(base)
+                        return EN.pow(growth, toBuy).sub(1).div(growth - 1).times(base)
                     },
                     onClick() {
-                        var i = this.id - 100
+                        let i = this.id - 100
 
-                        var max = this.max()
-                        var cost = this.maxcost()
+                        let max = tmp[this.layer].clickables[this.id].max
+                        let cost = tmp[this.layer].clickables[this.id].maxcost
 
-                        player.aar.dimPoints = player.aar.dimPoints.sub(cost)
+                        if (cost.array[1] < 2) player.aar.dimPoints = player.aar.dimPoints.sub(cost).max(0)
                         player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(max)
                         player.aar.dims[i] = player.aar.dims[i].add(max)
                     },
@@ -780,16 +917,24 @@ addLayer("aar", {
                 return player.aar.buyables[111].gte(1) || hasUpgrade("aar", 224)
             },
             canClick() {
-                for (a = 100; a < 110; a++) if (tmp.aar.clickables[a].canClick) return true
+                for (let a = 100; a < 110; a++) if (tmp.aar.clickables[a].canClick) return true
                 return false
             },
             onClick() {
-                for (var a of clickableEffect("aar", 112).order)
-                    clickClickable("aar", 100 + a)
+				let order = clickableEffect("aar", 112).order
+                for (let i = 0; i < order.length; i++) {
+					var dim = order[i]
+                    clickClickable("aar", 100 + dim)
+
+					if (i == 9) return
+					var next = order[i + 1]
+					var clickable = layers.aar.clickables[100 + next]
+					tmp.aar.clickables[100 + next].max = clickable.max()
+					tmp.aar.clickables[100 + next].maxcost = clickable.maxcost()
+				}
             },
             onHold() {
-                for (var a of clickableEffect("aar", 112).order)
-                    clickClickable("aar", 100 + a)
+                this.onClick()
             },
             style: { width: '100px', "min-height": '35px' }
         },
@@ -798,7 +943,7 @@ addLayer("aar", {
                 return "Buying order:<br/>" + clickableEffect(this.layer, this.id).title
             },
             effect() {
-                var value = player[this.layer].clickables[this.id] 
+                let value = player[this.layer].clickables[this.id] 
                 switch (value) {
                     case "highest": return {
                         order: [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
@@ -812,10 +957,10 @@ addLayer("aar", {
             },
             canClick: () => true,
             unlocked() {
-                return player.aar.buyables[111].gte(1) || hasUpgrade("aar", 225)
+                return player.aar.buyables[111].gte(9) || hasUpgrade("aar", 225)
             },
             onClick() {
-                var opts = ["highest", "lowest"]
+                let opts = ["highest", "lowest"]
                 player[this.layer].clickables[this.id] = opts[(opts.indexOf(player[this.layer].clickables[this.id]) + 1) % opts.length]
             },
             style: { width: '100px', "min-height": '35px' }
@@ -839,7 +984,8 @@ addLayer("aar", {
                     ["row", [["upgrade", 221], ["upgrade", 222], ["upgrade", 223], ["upgrade", 224], ["upgrade", 225]]],
                     ["row", [["upgrade", 231], ["upgrade", 232], ["upgrade", 233], ["upgrade", 234], ["upgrade", 235]]],
                     ["row", [["upgrade", 241], ["upgrade", 242], ["upgrade", 243], ["upgrade", 244], ["upgrade", 245]]],
-                    ["row", [["upgrade", 251]]],
+                    ["row", [["upgrade", 251], ["upgrade", 252], ["upgrade", 253], ["upgrade", 254], ["upgrade", 255]]],
+                    ["row", [["upgrade", 261], ["upgrade", 262], ["upgrade", 263], ["upgrade", 264], ["upgrade", 265]]],
                 ],
             },
             "adims": {
@@ -851,19 +997,17 @@ addLayer("aar", {
                     ["blank", "20px"],
                     ["row", [["raw-html", "<div style='width:285px'></div>"], ["clickable", 112], ["clickable", 111]]],
                     ["column", (function () {
-                        var rows = []
-                        for (var a = 0; a < 10; a++) {
+                        let rows = []
+                        for (let a = 0; a < 10; a++) {
                             function mFunc () {
-                                return player.aar.buyables[111].gte(this[1].tier - 3) ? `<div style="width:85px;font-size:12px;text-align:left">
-                                    Dimension ${this[1].tier + 1}<br/>
-                                    ×${format(buyableEffect("aar", this[1].tier + 100))}
+                                return player.aar.buyables[111].gte(a - 3) ? `<div style="width:85px;font-size:12px;text-align:left">
+                                    Dimension ${a + 1}<br/>
+                                    ×${format(buyableEffect("aar", a + 100))}
                                 </div>` : ''
                             }
-                            mFunc.tier = a
                             function aFunc () {
-                                return player.aar.buyables[111].gte(this[1].tier - 3) ? `<div style="width:200px"><b>${format(player.aar.dims[this[1].tier])}</b></div>` : ''
+                                return player.aar.buyables[111].gte(a - 3) ? `<div style="width:200px"><b>${format(player.aar.dims[a])}</b></div>` : ''
                             }
-                            aFunc.tier = a
                             rows.push(["row", [
                                 ["raw-html", mFunc],
                                 ["raw-html", aFunc],
@@ -877,23 +1021,28 @@ addLayer("aar", {
                     ["row", [["buyable", 111], ["buyable", 112], ["buyable", 113]]]
                 ],
             },
-            "options": {
-                title: "(Aarex's Layer Edit) Options",
-                content: [
-                    ["ale-options"]
-                ],
-            },
         },
     },
     tabFormat: [
         "main-display",
         "prestige-button",
         ["blank", "20px"],
-        ["raw-html", () => `You have <h3 style="color:#fff9ab">${format(player.aar.bal)}</h3> Aarex balancing. (${format(tmp[this.layer].effect.balProd)}/s)`],
+        ["raw-html", () => `You have <h3 style="color:#fff9ab">${format(player.aar.bal)}</h3> Aarex balancing. (${format(tmp.aar.effect.balProd)}/s)`],
         ["blank", "10px"],
         ["microtabs", "main"],
         ["blank", "20px"],
     ],
 })
 
-//Aarex's mod for his layer edit
+let AAREX_SAFE = {
+	calcDimMult(dim) {
+		let eff = EN.pow(tmp.aar.multPerDim, player.aar.buyables[dim + 99].sub(1).max(0))
+		eff = eff.mul(tmp.aar.boostPow.div(EN.pow(2, dim - 1)).max(1))
+		eff = eff.mul(tmp.aar.globalMult)
+
+		if (dim == 10 || hasUpgrade("aar", 231)) eff = eff.mul(tmp.aar.sacMult)
+		if (hasUpgrade("aar", 241)) eff = eff.mul(tmp.aar.buyables[dim + 99].cost.pow(0.01))
+   
+		return eff
+	}
+}

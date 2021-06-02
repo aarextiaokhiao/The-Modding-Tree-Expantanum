@@ -17,7 +17,7 @@ function commaFormat(num, precision) {
 }
 
 function formatSmall(x, precision = 2) { 
-    return format(x, precision, true)    
+    return format(x, precision, true)
 }
 
 function regularFormat(num, precision) {
@@ -83,11 +83,23 @@ function format(decimal, precision = 2, small = false) {
 	return r
 }
 
+function superscript(value) {
+    if (player.inlineExp) return "^" + value
+    return swapChars(value, "0123456789,", "⁰¹²³⁴⁵⁶⁷⁸⁹’")
+}
+
+function swapChars(value, start, end) {
+    for (var a = 0; a < start.length; a++)
+        value = value.replaceAll(start[a], end[a])
+    return value
+}
+
 function formatWhole(decimal) {
     return format(decimal,0)
 }
 
 function formatTime(s) {
+    if (s > 31536000000 || (s.gt && s.gt(31536000000))) return format(EN(s).div(31536000)) + " years"
     if (s < 60) return format(s) + "s"
     else if (s < 3600) return formatWhole(Math.floor(s / 60)) + "m " + format(s % 60) + "s"
     else if (s < 84600) return formatWhole(Math.floor(s / 3600)) + "h " + formatWhole(Math.floor(s / 60) % 60) + "m " + format(s % 60) + "s"
